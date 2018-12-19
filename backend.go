@@ -22,6 +22,7 @@ func toJSON(c *gin.Context) map[string]interface{} {
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(c.Request.Body)
 
+	fmt.Println(buf.String())
 	// Convert to JSON object
 	var jsonStr map[string]interface{}
 	err := json.Unmarshal([]byte(buf.String()), &jsonStr)
@@ -83,7 +84,7 @@ func addIPstats(srcIP string) {
 	defer db.Close()
 
 	// check if IP exists
-	row, err := db.Query("SELECT src_ip, num_traffic FROM traffic WHERE src_ip = ?", srcIP)
+	row, err := db.Query("SELECT ip, num_attempts FROM traffic WHERE ip = ?", srcIP)
 	checkerr(err)
 	defer row.Close()
 
@@ -92,27 +93,27 @@ func addIPstats(srcIP string) {
 		count++
 		fmt.Println("Found a record...")
 		var numAttempts string
-		err := row.Scan(&username, &password, &numAttempts)
+		err := row.Scan(&srcIP, &numAttempts)
 		checkerr(err)
 
 		// Increment number of attempts
-		stmt, err := db.Prepare("UPDATE dictionary set num_attempts=? where username=? AND password=?")
+		stmt, err := db.Prepare("UPDATE traffic set num_attempts=? where ip=?")
 		checkerr(err)
 		defer stmt.Close()
 
-		fmt.Println("Num attempts = " + numAttempts)
+		fmt.Println("Num attempts for " + srcIP + " : " + numAttempts)
 		numAttemptsINT, err := strconv.Atoi(numAttempts)
 		checkerr(err)
 		newNumAttemptsINT := numAttemptsINT + 1
 		newNumAttempts := strconv.Itoa(newNumAttemptsINT)
 
-		stmt.Exec(newNumAttempts, username, password)
+		stmt.Exec(newNumAttempts, srcIP)
 	}
 
 	if count == 0 {
-		fmt.Println("Didn't find any records for combination " + username + ":" + password)
-		// Insert into dictionary as a new combination
-		insert, err := db.Query("INSERT INTO dictionary VALUES ( ?, ?, 1 )", username, password)
+		fmt.Println("Didn't find any records for IP " + srcIP)
+		// Insert into dictionary as a new IP
+		insert, err := db.Query("INSERT INTO traffic VALUES ( ?, 1 )", srcIP)
 		checkerr(err)
 		defer insert.Close()
 	}
@@ -120,18 +121,16 @@ func addIPstats(srcIP string) {
 
 func processJSON(jsonStr map[string]interface{}) {
 	// Detect event type based on EventID and collect relevant information and send them to mysql
+	srcIP, _ := json.Marshal(jsonStr["src_ip"])
+	addIPstats(string(srcIP))
 	switch jsonStr["eventid"] {
 	case "cowrie.login.success", "cowrie.login.failed":
 		username, _ := json.Marshal(jsonStr["username"])
 		password, _ := json.Marshal(jsonStr["password"])
 		addLoginAttempt(string(username), string(password))
 
-		srcIP, _ := json.Marshal(jsonStr["src_ip"])
-		addIPstats(string(srcIP))
-
 	case "cowrie.direct-tcpip.request":
 		// fmt.Println("Tunnel Request")
-
 	}
 }
 
