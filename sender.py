@@ -7,7 +7,7 @@ import requests
 
         
 # Cowrie log file
-file_path = "a.txt"
+file_path = "sample2.txt"
 url = "http://127.0.0.1:8080/signal"
 http_auth = {
     "user": "plus",
@@ -15,17 +15,13 @@ http_auth = {
 }
 
 get_today = lambda: datetime.now().strftime("%Y-%m-%d")
-today = get_today()
 
 
-
-
-
-def log(message):
-    logger_path = "/".join(os.path.realpath(__file__).split("/")[:-1] + ["logger.log"])
-    with open(logger_path, "a+") as f:
-        f.write(message)
-        f.write("\n" * 3)
+# def log(message):
+#     logger_path = "/".join(os.path.realpath(__file__).split("/")[:-1] + ["logger.log"])
+#     with open(logger_path, "a+") as f:
+#         f.write(message)
+#         f.write("\n" * 3)
 
 
 def send_signal(line):
@@ -36,21 +32,20 @@ def send_signal(line):
             requests.post(url, data=line, timeout=3, auth=(http_auth["user"], http_auth["pass"]))
             break
         except Exception as e:
-            print(str(e))
-            sleep(1)
+            print(str(e), flush=True)
+            sleep(5)
 
 
-def main():
-    global today
+def main(today):
     with open(file_path, "r") as f:
         while True:
             if get_today() != today:
                 # Exit condition: The moment of midnight. (Date changed)
-                exit()
+                return
             line = f.readline().replace("\n", "")
             if len(line) > 1:
                 # Send the log to threatdef's backend
-                print("Sending: "+line)
+                print("Sending line with size: %s" % len(line), flush=True)
                 send_signal(line)
             else:
                 sleep(5)
@@ -58,7 +53,7 @@ def main():
 if __name__ == "__main__":
     while True:
         try:
-            main()
+            main(get_today())
         except Exception as e:
-            log("Something went wrong: " + str(e))
+            print("Something went wrong: " + str(e), flush=True)
             sleep(5)
