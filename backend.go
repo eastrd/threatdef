@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
@@ -22,7 +23,7 @@ func toJSON(c *gin.Context) map[string]interface{} {
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(c.Request.Body)
 
-	fmt.Println(buf.String())
+	// fmt.Println(buf.String())
 	// Convert to JSON object
 	var jsonStr map[string]interface{}
 	err := json.Unmarshal([]byte(buf.String()), &jsonStr)
@@ -69,7 +70,7 @@ func addLoginAttempt(username, password string) {
 
 	if count == 0 {
 		fmt.Println("Didn't find any records for combination " + username + ":" + password)
-		// Insert into dictionary as a new combination
+		// Insert into dictionary table as a new combination
 		insert, err := db.Query("INSERT INTO dictionary VALUES ( ?, ?, 1 )", username, password)
 		checkerr(err)
 		defer insert.Close()
@@ -78,7 +79,6 @@ func addLoginAttempt(username, password string) {
 
 func addIPstats(srcIP string) {
 	// Log IP statistics information
-
 	db, err := sql.Open("mysql", "threatdef:194122602@tcp(108.61.169.45:3306)/threatdef")
 	checkerr(err)
 	defer db.Close()
@@ -119,9 +119,27 @@ func addIPstats(srcIP string) {
 	}
 }
 
+func addTunnelData(epoch, srcIP, dstIP, data string) {
+	// Log tunneling HTTP data
+	db, err := sql.Open("mysql", "threatdef:194122602@tcp(108.61.169.45:3306)/threatdef")
+	checkerr(err)
+	defer db.Close()
+
+	// Create table if not exist
+	create, err := db.Query("CREATE TABLE IF NOT EXISTS http (http_id INT AUTO_INCREMENT, epoch INT NOT NULL, src_ip VARCHAR(25) NOT NULL, dst_ip VARCHAR(25) NOT NULL, data TEXT, PRIMARY KEY (http_id))")
+	checkerr(err)
+	defer create.Close()
+
+	// Insert into http table
+	insert, err := db.Query("INSERT INTO http (epoch, src_ip, dst_ip, data) VALUES ( ?, ?, ?, ? )", epoch, srcIP, dstIP, data)
+	checkerr(err)
+	defer insert.Close()
+}
+
 func processJSON(jsonStr map[string]interface{}) {
 	// Detect event type based on EventID and collect relevant information and send them to mysql
 	srcIP, _ := json.Marshal(jsonStr["src_ip"])
+	epoch, _ := json.Marshal(jsonStr["epoch"])
 	addIPstats(string(srcIP))
 	switch jsonStr["eventid"] {
 	case "cowrie.login.success", "cowrie.login.failed":
@@ -129,8 +147,14 @@ func processJSON(jsonStr map[string]interface{}) {
 		password, _ := json.Marshal(jsonStr["password"])
 		addLoginAttempt(string(username), string(password))
 
-	case "cowrie.direct-tcpip.request":
-		// fmt.Println("Tunnel Request")
+	case "cowrie.direct-tcpip.data":
+		// Tunnel Request: epoch int, src_ip varchar, dst_ip varchar, data varchar
+		dstIP, _ := json.Marshal(jsonStr["dst_ip"])
+		data, _ := json.Marshal(jsonStr["data"])
+		// Check that the Data is in plain text instead of HTTPS connection (i.e. No "\\x{number}")
+		if !strings.Contains(string(data), "\\\\x") {
+			addTunnelData(string(epoch), string(srcIP), string(dstIP), string(data))
+		}
 	}
 }
 
