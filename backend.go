@@ -36,10 +36,13 @@ func addLoginAttempt(username, password string) {
 	// Log statistics for brute force combinations
 
 	// Connect to MySQL
-	// fmt.Println(username + ":" + password)
-	db, err := sql.Open("mysql", "threatdef:194122602@tcp(108.61.169.45:3306)/threatdef")
-	checkerr(err)
+	db := openDb()
 	defer db.Close()
+
+	// Create table if not exist
+	create, err := db.Query("CREATE TABLE IF NOT EXISTS dictionary (username VARCHAR(255) NOT NULL, password VARCHAR(255) NOT NULL, num_attempts INT NOT NULL)")
+	checkerr(err)
+	defer create.Close()
 
 	// check if login combination exists
 	row, err := db.Query("SELECT username, password, num_attempts FROM dictionary WHERE username = ? AND password = ?", username, password)
@@ -77,11 +80,21 @@ func addLoginAttempt(username, password string) {
 	}
 }
 
-func addIPstats(srcIP string) {
-	// Log IP statistics information
+func openDb() *sql.DB {
 	db, err := sql.Open("mysql", "threatdef:194122602@tcp(108.61.169.45:3306)/threatdef")
 	checkerr(err)
+	return db
+}
+
+func addIPstats(srcIP string) {
+	// Log IP statistics information
+	db := openDb()
 	defer db.Close()
+
+	// Create table if not exist
+	create, err := db.Query("CREATE TABLE IF NOT EXISTS traffic (ip VARCHAR(25) NOT NULL, num_attempts INT NOT NULL)")
+	checkerr(err)
+	defer create.Close()
 
 	// check if IP exists
 	row, err := db.Query("SELECT ip, num_attempts FROM traffic WHERE ip = ?", srcIP)
@@ -121,8 +134,7 @@ func addIPstats(srcIP string) {
 
 func addTunnelData(epoch, srcIP, dstIP, data string) {
 	// Log tunneling HTTP data
-	db, err := sql.Open("mysql", "threatdef:194122602@tcp(108.61.169.45:3306)/threatdef")
-	checkerr(err)
+	db := openDb()
 	defer db.Close()
 
 	// Create table if not exist
@@ -136,12 +148,29 @@ func addTunnelData(epoch, srcIP, dstIP, data string) {
 	defer insert.Close()
 }
 
+func addInput(epoch, srcIP, cmd string) {
+	// Log input interaction commands
+	db := openDb()
+	defer db.Close()
+
+	// Create table if not exist
+	create, err := db.Query("CREATE TABLE IF NOT EXISTS input (input_id INT AUTO_INCREMENT, epoch INT NOT NULL, src_ip VARCHAR(25) NOT NULL, cmd TEXT, PRIMARY KEY (input_id))")
+	checkerr(err)
+	defer create.Close()
+
+	// Insert into input table
+	insert, err := db.Query("INSERT INTO input (epoch, src_ip, cmd) VALUES (?, ?, ?)", epoch, srcIP, cmd)
+	checkerr(err)
+	defer insert.Close()
+}
+
 func processJSON(jsonStr map[string]interface{}) {
 	// Detect event type based on EventID and collect relevant information and send them to mysql
-	srcIP, _ := json.Marshal(jsonStr["src_ip"])
 	epoch, _ := json.Marshal(jsonStr["epoch"])
+	srcIP, _ := json.Marshal(jsonStr["src_ip"])
 	addIPstats(string(srcIP))
 	switch jsonStr["eventid"] {
+
 	case "cowrie.login.success", "cowrie.login.failed":
 		username, _ := json.Marshal(jsonStr["username"])
 		password, _ := json.Marshal(jsonStr["password"])
@@ -155,6 +184,11 @@ func processJSON(jsonStr map[string]interface{}) {
 		if !strings.Contains(string(data), "\\\\x") {
 			addTunnelData(string(epoch), string(srcIP), string(dstIP), string(data))
 		}
+
+	case "cowrie.command.input":
+		// Capture Command inputs
+		cmd, _ := json.Marshal(jsonStr["input"])
+		addInput(string(epoch), string(srcIP), string(cmd))
 	}
 }
 
