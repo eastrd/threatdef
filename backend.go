@@ -138,7 +138,7 @@ func addTunnelData(epoch, srcIP, dstIP, data string) {
 	defer db.Close()
 
 	// Create table if not exist
-	create, err := db.Query("CREATE TABLE IF NOT EXISTS http (http_id INT AUTO_INCREMENT, epoch INT NOT NULL, src_ip VARCHAR(25) NOT NULL, dst_ip VARCHAR(25) NOT NULL, data TEXT, PRIMARY KEY (http_id))")
+	create, err := db.Query("CREATE TABLE IF NOT EXISTS http (http_id INT AUTO_INCREMENT, epoch VARCHAR(25) NOT NULL, src_ip VARCHAR(25) NOT NULL, dst_ip VARCHAR(25) NOT NULL, data TEXT, PRIMARY KEY (http_id))")
 	checkerr(err)
 	defer create.Close()
 
@@ -154,7 +154,7 @@ func addInput(epoch, srcIP, cmd string) {
 	defer db.Close()
 
 	// Create table if not exist
-	create, err := db.Query("CREATE TABLE IF NOT EXISTS input (input_id INT AUTO_INCREMENT, epoch INT NOT NULL, src_ip VARCHAR(25) NOT NULL, cmd TEXT, PRIMARY KEY (input_id))")
+	create, err := db.Query("CREATE TABLE IF NOT EXISTS input (input_id INT AUTO_INCREMENT, epoch VARCHAR(25) NOT NULL, src_ip VARCHAR(25) NOT NULL, cmd TEXT, PRIMARY KEY (input_id))")
 	checkerr(err)
 	defer create.Close()
 
