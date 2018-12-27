@@ -37,8 +37,15 @@ type Command struct {
 	Cmd     string `json:"cmd"`
 }
 
+// Cred struct
+type Cred struct {
+	Username    string `json:"username"`
+	Password    string `json:"password"`
+	NumAttempts string `json:"num_attempts"`
+}
+
 func getTunnelRecords() []Tunnel {
-	// Return latest X tunnel records based on decreasing ID in JSON format
+	// Return latest X tunnel records based on decreasing ID as a slice of structs
 	db := openDb()
 	defer db.Close()
 
@@ -69,7 +76,7 @@ func getTunnelRecords() []Tunnel {
 }
 
 func getCommandRecords() []Command {
-	// Return latest X command records based on decreasing ID in JSON format
+	// Return latest X command records based on decreasing ID as a slice of structs
 	db := openDb()
 	defer db.Close()
 
@@ -98,6 +105,36 @@ func getCommandRecords() []Command {
 	return cs
 }
 
+func listLoginCreds() []Cred {
+	// Return top 20 login creds based on decreasing number of attempts as a slice of structs
+	db := openDb()
+	defer db.Close()
+
+	row, err := db.Query("SELECT username, password, num_attempts FROM dictionary order by num_attempts desc limit 20")
+	checkerr(err)
+	defer row.Close()
+
+	var username, password, numAttempts string
+	var c Cred
+
+	cs := make([]Cred, 0)
+
+	for row.Next() {
+		err := row.Scan(&username, &password, &numAttempts)
+		checkerr(err)
+
+		// Strip '"' from start and end of the field data
+		username = strings.Trim(username, `"`)
+		password = strings.Trim(password, `"' `)
+
+		// Craft slice of structs
+		c = Cred{username, password, numAttempts}
+		cs = append(cs, c)
+	}
+
+	return cs
+}
+
 func main() {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
@@ -108,6 +145,10 @@ func main() {
 
 	router.GET("/cmd", func(c *gin.Context) {
 		c.JSON(200, getCommandRecords())
+	})
+
+	router.GET("/login", func(c *gin.Context) {
+		c.JSON(200, listLoginCreds())
 	})
 
 	router.Run(":8001")
