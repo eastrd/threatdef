@@ -13,8 +13,8 @@ Backend: Receiver (Golang)
 Backend: RestAPI (Golang)
 - Write endpoints for:
     - Return latest X tunnel records based on decreasing ID in JSON format (DONE)
-    - Return latest X cmd records based on decreasing ID in JSON format
-    - Return top X login combinations based on decreasing num_attempts in JSON format
+    - Return latest X cmd records based on decreasing ID in JSON format (DONE)
+    - Return top X login combinations based on decreasing num_attempts in JSON format (DONE)
     - Design a way to show live attacks
     - Design a way to show heatmap of attacks based on regions
 
