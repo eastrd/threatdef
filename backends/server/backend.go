@@ -1,9 +1,7 @@
 package main
 
 import (
-	"bytes"
 	"database/sql"
-	"encoding/json"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -16,33 +14,27 @@ func checkerr(err error) {
 	}
 }
 
-func toJSON(c *gin.Context) map[string]interface{} {
-	// Bytes to String
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(c.Request.Body)
-
-	// fmt.Println(buf.String())
-	// Convert to JSON object
-	var jsonStr map[string]interface{}
-	err := json.Unmarshal([]byte(buf.String()), &jsonStr)
-	checkerr(err)
-	// fmt.Println(jsonStr["eventid"])
-	return jsonStr
-}
-
 func openDb() *sql.DB {
 	db, err := sql.Open("mysql", "threatdef:194122602@tcp(108.61.169.45:3306)/threatdef")
 	checkerr(err)
 	return db
 }
 
-// Tunnel Struct
+// Tunnel struct
 type Tunnel struct {
 	HTTPID string `json:"http_id"`
 	Epoch  string `json:"epoch"`
 	SrcIP  string `json:"src_ip"`
 	DstIP  string `json:"dst_ip"`
 	Data   string `json:"data"`
+}
+
+// Command struct
+type Command struct {
+	InputID string `json:"input_id"`
+	Epoch   string `json:"epoch"`
+	SrcIP   string `json:"src_ip"`
+	Cmd     string `json:"cmd"`
 }
 
 func getTunnelRecords() []Tunnel {
@@ -77,7 +69,33 @@ func getTunnelRecords() []Tunnel {
 }
 
 func getCommandRecords() []Command {
+	// Return latest X command records based on decreasing ID in JSON format
+	db := openDb()
+	defer db.Close()
 
+	row, err := db.Query("SELECT input_id, epoch, src_ip, cmd FROM input order by input_id desc limit 10")
+	checkerr(err)
+	defer row.Close()
+
+	var inputID, epoch, srcIP, cmd string
+	var c Command
+
+	cs := make([]Command, 0)
+
+	for row.Next() {
+		err := row.Scan(&inputID, &epoch, &srcIP, &cmd)
+		checkerr(err)
+
+		// Strip '"' from start and end of the field data
+		srcIP = strings.Trim(srcIP, `"`)
+		cmd = strings.Replace(strings.Trim(cmd, `"' `), `\\`, `\`, -1)
+
+		// Craft slice of structs
+		c = Command{inputID, epoch, srcIP, cmd}
+		cs = append(cs, c)
+	}
+
+	return cs
 }
 
 func main() {
