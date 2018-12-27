@@ -193,9 +193,10 @@ func processJSON(jsonStr map[string]interface{}) {
 }
 
 func main() {
-	r := gin.Default()
+	gin.SetMode(gin.ReleaseMode)
+	router := gin.Default()
 
-	authorized := r.Group("/", gin.BasicAuth(gin.Accounts{
+	authorized := router.Group("/", gin.BasicAuth(gin.Accounts{
 		"plus": "midoriya",
 	}))
 
@@ -206,5 +207,5 @@ func main() {
 		})
 	})
 
-	r.Run() // listen and serve on 0.0.0.0:8080
+	router.Run(":8080")
 }
