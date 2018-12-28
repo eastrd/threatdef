@@ -181,7 +181,7 @@ func processJSON(jsonStr map[string]interface{}) {
 		dstIP, _ := json.Marshal(jsonStr["dst_ip"])
 		data, _ := json.Marshal(jsonStr["data"])
 		// Check that the Data is in plain text instead of HTTPS connection (i.e. No "\\x{number}")
-		if !strings.Contains(string(data), "\\\\x") {
+		if !strings.Contains(string(data), "\\\\x") && (strings.Contains(string(data), "GET") || strings.Contains(string(data), "POST")) {
 			addTunnelData(string(epoch), string(srcIP), string(dstIP), string(data))
 		}
 
