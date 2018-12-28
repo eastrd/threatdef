@@ -135,9 +135,16 @@ func listLoginCreds() []Cred {
 	return cs
 }
 
+func serverHeader(c *gin.Context) {
+	c.Header("Access-Control-Allow-Origin", "*")
+}
+
 func main() {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
+
+	// Change Header to allow CORS
+	router.Use(serverHeader)
 
 	router.GET("/tunnel", func(c *gin.Context) {
 		c.JSON(200, getTunnelRecords())
