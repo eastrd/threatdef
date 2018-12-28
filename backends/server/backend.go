@@ -49,7 +49,7 @@ func getTunnelRecords() []Tunnel {
 	db := openDb()
 	defer db.Close()
 
-	row, err := db.Query("SELECT http_id, epoch, src_ip, dst_ip, data FROM http order by http_id desc limit 10")
+	row, err := db.Query("SELECT http_id, epoch, src_ip, dst_ip, data FROM http order by http_id desc limit 20")
 	checkerr(err)
 	defer row.Close()
 
@@ -80,7 +80,7 @@ func getCommandRecords() []Command {
 	db := openDb()
 	defer db.Close()
 
-	row, err := db.Query("SELECT input_id, epoch, src_ip, cmd FROM input order by input_id desc limit 10")
+	row, err := db.Query("SELECT input_id, epoch, src_ip, cmd FROM input order by input_id desc limit 20")
 	checkerr(err)
 	defer row.Close()
 
