@@ -110,7 +110,7 @@ func listLoginCreds() []Cred {
 	db := openDb()
 	defer db.Close()
 
-	row, err := db.Query("SELECT username, password, num_attempts FROM dictionary order by num_attempts desc limit 20")
+	row, err := db.Query(`SELECT username, password, num_attempts FROM dictionary WHERE username!="\"root\"" AND password!="\"root\"" order by num_attempts desc limit 20`)
 	checkerr(err)
 	defer row.Close()
 
