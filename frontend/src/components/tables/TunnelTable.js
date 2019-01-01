@@ -27,19 +27,18 @@ class TunnelTable extends Component {
           return record;
         })
       )
-      .then(data => this.setState({ tunnels: data }));
+      .then(data => this.setState({ tunnels: data, loading: false }));
   }
 
   componentDidMount() {
-    // Display Spinning Icon for 1.5 Seconds
-    setTimeout(() => this.setState({ loading: false }), 1500);
-
-    // this.fetchData();
-    this.interval = setInterval(() => this.fetchData(), 3000);
+    let secondsToWait = this.props.secondsToWait || 3;
+    console.log("Tunnel table refresh rate:", secondsToWait);
+    this.interval = setInterval(() => this.fetchData(), secondsToWait * 1000);
   }
 
   render() {
     if (this.state.loading) {
+      // If data has not loaded, display the spinning icon
       console.log("Loading");
       return (
         <div>
@@ -68,7 +67,7 @@ class TunnelTable extends Component {
     ];
     return (
       <Table
-        pagination={{ pageSize: 4 }}
+        pagination={{ pageSize: this.props.pagesize || 4 }}
         columnWidth="1"
         rowKey="http_id"
         dataSource={tunnels}

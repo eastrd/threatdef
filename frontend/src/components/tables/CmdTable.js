@@ -27,19 +27,18 @@ class CmdTable extends Component {
           return record;
         })
       )
-      .then(data => this.setState({ cmds: data }));
+      .then(data => this.setState({ cmds: data, loading: false }));
   }
 
   componentDidMount() {
-    // Display Spinning Icon for 1.5 Seconds
-    setTimeout(() => this.setState({ loading: false }), 1500);
-
-    // this.fetchData();
-    this.interval = setInterval(() => this.fetchData(), 3000);
+    let secondsToWait = this.props.secondsToWait || 3;
+    console.log("Cmd table refresh rate:", secondsToWait);
+    this.interval = setInterval(() => this.fetchData(), secondsToWait * 1000);
   }
 
   render() {
     if (this.state.loading) {
+      // If data has not loaded, display the spinning icon.
       console.log("Loading");
       return (
         <div>
@@ -47,6 +46,7 @@ class CmdTable extends Component {
         </div>
       );
     }
+
     const { cmds } = this.state;
     const columns = [
       {
@@ -62,7 +62,7 @@ class CmdTable extends Component {
     ];
     return (
       <Table
-        pagination={{ pageSize: 4 }}
+        pagination={{ pageSize: this.props.pagesize || 4 }}
         rowKey="input_id"
         dataSource={cmds}
         columns={columns}
