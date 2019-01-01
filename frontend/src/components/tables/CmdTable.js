@@ -13,6 +13,7 @@ class CmdTable extends Component {
       loading: true,
       cmds: []
     };
+    this.fetchData();
   }
 
   fetchData() {

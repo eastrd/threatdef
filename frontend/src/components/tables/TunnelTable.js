@@ -13,6 +13,7 @@ class TunnelTable extends Component {
       loading: true,
       tunnels: []
     };
+    this.fetchData();
   }
 
   fetchData() {
