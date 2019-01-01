@@ -21,8 +21,8 @@ class NavBar extends Component {
               case "data":
                 window.location.href = "/data";
                 break;
-              case "download":
-                window.location.href = "/download";
+              case "resource":
+                window.location.href = "/resource";
                 break;
               default:
                 console.log("Error on navbar routing.");
@@ -37,8 +37,8 @@ class NavBar extends Component {
             <Icon type="table" />
             Data
           </Menu.Item>
-          <Menu.Item key="download">
-            <Icon type="download" />
+          <Menu.Item key="resource">
+            <Icon type="profile" />
             Downloads
           </Menu.Item>
         </Menu>
