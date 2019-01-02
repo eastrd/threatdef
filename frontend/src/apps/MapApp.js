@@ -1,7 +1,6 @@
 import React, { Component } from "react";
 import { Layout } from "antd";
 import "antd/dist/antd.css";
-import "../styles/App.css";
 import NavBar from "../components/NavBar";
 
 const { Content } = Layout;

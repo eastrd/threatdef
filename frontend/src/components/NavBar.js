@@ -1,7 +1,6 @@
 import React, { Component } from "react";
 import { Layout, Menu, Icon } from "antd";
 import "antd/dist/antd.css";
-import "../styles/App.css";
 
 const { Header } = Layout;
 
