@@ -51,6 +51,8 @@ class CredTable extends Component {
         rowKey={record => record.username + ":" + record.password}
         dataSource={creds}
         columns={columns}
+        bordered={true}
+        size="small"
       />
     );
   }

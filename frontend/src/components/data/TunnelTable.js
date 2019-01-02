@@ -74,6 +74,8 @@ class TunnelTable extends Component {
         dataSource={tunnels}
         columns={columns}
         expandedRowRender={record => <p style={{ margin: 0 }}>{record.data}</p>}
+        bordered={true}
+        size="small"
       />
     );
   }

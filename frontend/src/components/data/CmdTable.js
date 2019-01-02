@@ -68,6 +68,8 @@ class CmdTable extends Component {
         dataSource={cmds}
         columns={columns}
         expandedRowRender={record => <p style={{ margin: 0 }}>{record.cmd}</p>}
+        bordered={true}
+        size="small"
       />
     );
   }
