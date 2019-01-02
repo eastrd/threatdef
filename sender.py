@@ -7,7 +7,7 @@ import requests
 
         
 # Cowrie log file
-file_path = "sample2.txt"
+file_path = "samples/cmd_sample_me.txt"
 url = "http://127.0.0.1:8080/signal"
 http_auth = {
     "user": "plus",
@@ -45,7 +45,7 @@ def main(today):
             line = f.readline().replace("\n", "")
             if len(line) > 1:
                 # Send the log to threatdef's backend
-                print("Sending line with size: %s" % len(line), flush=True)
+                print("Sending %s" % (line), flush=True)
                 send_signal(line)
             else:
                 sleep(5)
