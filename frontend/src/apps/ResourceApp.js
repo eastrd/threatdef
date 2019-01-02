@@ -12,9 +12,9 @@ class ResourceApp extends Component {
         <Row>
           <Col span={12}>
             <h2>Brute Force Combinations</h2>
-            <CredTable pagesize={7} />
+            <CredTable pagesize={10} secondsToWait={30} />
           </Col>
-          <Col span={12}>col-12</Col>
+          <Col span={12}> Under Construction... </Col>
         </Row>
       </div>
     );

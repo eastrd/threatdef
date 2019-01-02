@@ -11,7 +11,9 @@ class MapApp extends Component {
       <div>
         <Layout>
           <NavBar />
-          <Content />
+          <Content>
+            <h1>Under Construction...</h1>
+          </Content>
         </Layout>
       </div>
     );
