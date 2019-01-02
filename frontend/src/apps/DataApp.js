@@ -14,11 +14,11 @@ class DataApp extends Component {
         <Row>
           <Col span={12}>
             <h2>Tunnel Data</h2>
-            <TunnelTable pagesize={5} secondsToWait={5} />
+            <TunnelTable pagesize={8} secondsToWait={5} />
           </Col>
           <Col span={12}>
             <h2>Command Input Data</h2>
-            <CmdTable pagesize={5} secondsToWait={10} />
+            <CmdTable pagesize={8} secondsToWait={10} />
           </Col>
         </Row>
       </div>
