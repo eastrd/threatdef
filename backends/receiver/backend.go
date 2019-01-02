@@ -188,7 +188,9 @@ func processJSON(jsonStr map[string]interface{}) {
 	case "cowrie.command.input":
 		// Capture Command inputs
 		cmd, _ := json.Marshal(jsonStr["input"])
-		addInput(string(epoch), string(srcIP), string(cmd))
+		if string(cmd) != `""` {
+			addInput(string(epoch), string(srcIP), string(cmd))
+		}
 	}
 }
 
