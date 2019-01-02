@@ -1,28 +1,26 @@
 import React, { Component } from "react";
-import { Layout } from "antd";
 import "antd/dist/antd.css";
-import TunnelTable from "../components/tables/TunnelTable";
-import "../styles/App.css";
+import TunnelTable from "../components/data/TunnelTable";
+import "../styles/tables.css";
 import NavBar from "../components/NavBar";
-import CmdTable from "../components/tables/CmdTable";
-
-const { Content } = Layout;
+import CmdTable from "../components/data/CmdTable";
+import { Row, Col } from "antd";
 
 class DataApp extends Component {
   render() {
     return (
       <div>
-        <Layout>
-          <NavBar />
-          <Content>
-            <h1>Tunnel Data</h1>
+        <NavBar />
+        <Row>
+          <Col span={12}>
+            <h2>Tunnel Data</h2>
             <TunnelTable pagesize={5} secondsToWait={5} />
-          </Content>
-          <Content>
-            <h1>Command Input Data</h1>
+          </Col>
+          <Col span={12}>
+            <h2>Command Input Data</h2>
             <CmdTable pagesize={5} secondsToWait={10} />
-          </Content>
-        </Layout>
+          </Col>
+        </Row>
       </div>
     );
   }
