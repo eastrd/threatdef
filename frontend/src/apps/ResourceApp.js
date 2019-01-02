@@ -1,19 +1,21 @@
 import React, { Component } from "react";
-import { Layout } from "antd";
 import "antd/dist/antd.css";
-import "../styles/App.css";
 import NavBar from "../components/NavBar";
-
-const { Content } = Layout;
+import CredTable from "../components/data/CredTable";
+import { Row, Col } from "antd";
 
 class ResourceApp extends Component {
   render() {
     return (
       <div>
-        <Layout>
-          <NavBar />
-          <Content />
-        </Layout>
+        <NavBar />
+        <Row>
+          <Col span={12}>
+            <h2>Brute Force Combinations</h2>
+            <CredTable pagesize={7} />
+          </Col>
+          <Col span={12}>col-12</Col>
+        </Row>
       </div>
     );
   }
