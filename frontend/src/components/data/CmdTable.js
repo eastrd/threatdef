@@ -3,7 +3,7 @@ import { Table } from "antd";
 import moment from "moment";
 import { Spin } from "antd";
 
-const CMD_API = "http://localhost:8001/cmd";
+const CMD_API = "http://threatdef.com:8001/cmd";
 
 class CmdTable extends Component {
   constructor() {

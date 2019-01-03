@@ -3,7 +3,7 @@ import { Table } from "antd";
 import { Spin } from "antd";
 import "../../styles/tables.css";
 
-const CRED_API = "http://localhost:8001/login";
+const CRED_API = "http://threatdef.com:8001/login";
 
 class CredTable extends Component {
   constructor() {

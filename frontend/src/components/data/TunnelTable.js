@@ -3,7 +3,7 @@ import { Table } from "antd";
 import moment from "moment";
 import { Spin } from "antd";
 
-const TUNNEL_API = "http://localhost:8001/tunnel";
+const TUNNEL_API = "http://threatdef.com:8001/tunnel";
 
 class TunnelTable extends Component {
   constructor() {
