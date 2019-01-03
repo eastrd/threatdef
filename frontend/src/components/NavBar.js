@@ -38,7 +38,7 @@ class NavBar extends Component {
           </Menu.Item>
           <Menu.Item key="resource">
             <Icon type="profile" />
-            Downloads
+            Resource
           </Menu.Item>
         </Menu>
       </Header>
