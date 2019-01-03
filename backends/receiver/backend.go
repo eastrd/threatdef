@@ -81,7 +81,7 @@ func addLoginAttempt(username, password string) {
 }
 
 func openDb() *sql.DB {
-	db, err := sql.Open("mysql", "threatdef:194122602@tcp(108.61.169.45:3306)/threatdef")
+	db, err := sql.Open("mysql", "")
 	checkerr(err)
 	return db
 }
