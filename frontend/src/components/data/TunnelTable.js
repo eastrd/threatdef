@@ -40,10 +40,18 @@ class TunnelTable extends Component {
   render() {
     if (this.state.loading) {
       // If data has not loaded, display the spinning icon
-      console.log("Loading");
       return (
         <div>
-          <Spin size="large" />
+          <Spin
+            size="large"
+            tips="Loading Data"
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              height: "100%"
+            }}
+          />
         </div>
       );
     }
@@ -68,7 +76,10 @@ class TunnelTable extends Component {
     ];
     return (
       <Table
-        pagination={{ pageSize: this.props.pagesize || 4 }}
+        pagination={{
+          pageSize: this.props.pagesize || 4,
+          position: "top"
+        }}
         columnWidth="1"
         rowKey="http_id"
         dataSource={tunnels}

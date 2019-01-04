@@ -31,10 +31,18 @@ class CredTable extends Component {
   render() {
     if (this.state.loading) {
       // If data has not loaded, display the spinning icon.
-      console.log("Loading");
       return (
         <div>
-          <Spin size="large" />
+          <Spin
+            size="large"
+            tips="Loading Data"
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              height: "100%"
+            }}
+          />
         </div>
       );
     }
@@ -47,7 +55,10 @@ class CredTable extends Component {
     ];
     return (
       <Table
-        pagination={{ pageSize: this.props.pagesize || 4 }}
+        pagination={{
+          pageSize: this.props.pagesize || 4,
+          position: "top"
+        }}
         rowKey={record => record.username + ":" + record.password}
         dataSource={creds}
         columns={columns}
