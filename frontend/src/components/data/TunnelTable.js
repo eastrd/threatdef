@@ -1,7 +1,6 @@
 import React, { Component } from "react";
-import { Table } from "antd";
+import { Table, Spin, Modal, Button } from "antd";
 import moment from "moment";
-import { Spin } from "antd";
 
 const TUNNEL_API = "http://threatdef.com:8001/tunnel";
 
@@ -11,7 +10,10 @@ class TunnelTable extends Component {
     // Set initial state
     this.state = {
       loading: true,
-      tunnels: []
+      tunnels: [],
+      modalVisible: false,
+      modalContent: null,
+      modelTitle: ""
     };
     this.fetchData();
   }
@@ -30,6 +32,21 @@ class TunnelTable extends Component {
       )
       .then(data => this.setState({ tunnels: data, loading: false }));
   }
+
+  showModal(src_ip, dst_ip, content) {
+    this.setState({
+      modalVisible: true,
+      modalContent: content,
+      modalTitle: src_ip + " -> " + dst_ip
+    });
+  }
+
+  handleOk = e => {
+    this.setState({
+      modalVisible: false,
+      modalContent: null
+    });
+  };
 
   componentDidMount() {
     let secondsToWait = this.props.secondsToWait || 3;
@@ -75,19 +92,44 @@ class TunnelTable extends Component {
       }
     ];
     return (
-      <Table
-        pagination={{
-          pageSize: this.props.pagesize || 4,
-          position: "top"
-        }}
-        columnWidth="1"
-        rowKey="http_id"
-        dataSource={tunnels}
-        columns={columns}
-        expandedRowRender={record => <p style={{ margin: 0 }}>{record.data}</p>}
-        bordered={true}
-        size="small"
-      />
+      <div>
+        <Table
+          pagination={{ pageSize: this.props.pagesize || 4, position: "top" }}
+          columnWidth="1"
+          rowKey="http_id"
+          dataSource={tunnels}
+          columns={columns}
+          bordered={true}
+          size="small"
+          onRow={record => {
+            return {
+              onClick: () => {
+                // Render into Modal
+                this.showModal(
+                  record.src_ip,
+                  record.dst_ip,
+                  record.data.split("\\r\\n")
+                );
+              }
+            };
+          }}
+        />
+        <Modal
+          title={this.state.modalTitle}
+          visible={this.state.modalVisible}
+          onOk={this.handleOk}
+          onCancel={this.handleOk}
+        >
+          {this.state.modalContent
+            ? this.state.modalContent.map(s => (
+                <React.Fragment>
+                  {s}
+                  <br />
+                </React.Fragment>
+              ))
+            : ""}
+        </Modal>
+      </div>
     );
   }
 }
