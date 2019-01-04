@@ -104,7 +104,9 @@ class TunnelTable extends Component {
     return (
       <div>
         <Table
-          pagination={{ pageSize: this.props.pagesize || 4, position: "top" }}
+          pagination={{
+            pageSize: this.props.pagesize || 4
+          }}
           columnWidth="1"
           rowKey="http_id"
           dataSource={tunnels}

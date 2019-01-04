@@ -73,7 +73,7 @@ class CmdTable extends Component {
       <Table
         pagination={{
           pageSize: this.props.pagesize || 4,
-          position: "top"
+          position: "bottom"
         }}
         rowKey="input_id"
         dataSource={cmds}

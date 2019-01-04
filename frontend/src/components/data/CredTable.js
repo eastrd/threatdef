@@ -57,7 +57,7 @@ class CredTable extends Component {
       <Table
         pagination={{
           pageSize: this.props.pagesize || 4,
-          position: "top"
+          position: "bottom"
         }}
         rowKey={record => record.username + ":" + record.password}
         dataSource={creds}
