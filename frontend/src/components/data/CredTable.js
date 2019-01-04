@@ -19,7 +19,7 @@ class CredTable extends Component {
   fetchData() {
     fetch(CRED_API)
       .then(resp => resp.json())
-      .then(data => this.setState({ creds: data, loading: false }));
+      .then(data => this.setState(() => ({ creds: data, loading: false })));
   }
 
   componentDidMount() {

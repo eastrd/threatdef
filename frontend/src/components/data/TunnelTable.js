@@ -38,21 +38,21 @@ class TunnelTable extends Component {
           return record;
         })
       )
-      .then(data => this.setState({ tunnels: data, loading: false }));
+      .then(data => this.setState(() => ({ tunnels: data, loading: false })));
   }
 
   showModal(src_ip, dst_ip, content) {
-    this.setState({
+    this.setState(() => ({
       modalVisible: true,
       modalContent: content,
       modalTitle: src_ip + " -> " + dst_ip
-    });
+    }));
   }
 
   handleOk = e => {
-    this.setState({
+    this.setState(() => ({
       modalVisible: false
-    });
+    }));
   };
 
   handleCopy = e => {

@@ -28,7 +28,7 @@ class CmdTable extends Component {
           return record;
         })
       )
-      .then(data => this.setState({ cmds: data, loading: false }));
+      .then(data => this.setState(() => ({ cmds: data, loading: false })));
   }
 
   componentDidMount() {
