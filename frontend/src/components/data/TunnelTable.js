@@ -137,7 +137,9 @@ class TunnelTable extends Component {
           ]}
         >
           {this.state.modalContent
-            ? this.state.modalContent.split("\\r\\n").map(s => <div>{s}</div>)
+            ? this.state.modalContent
+                .split("\\r\\n")
+                .map(s => (s.length > 1 ? <div>{s}</div> : null))
             : ""}
         </Modal>
       </div>
