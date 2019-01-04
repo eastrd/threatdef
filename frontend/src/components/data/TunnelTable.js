@@ -2,6 +2,8 @@ import React, { Component } from "react";
 import { Table, Spin, Modal, Button, message } from "antd";
 import moment from "moment";
 import copy from "copy-to-clipboard";
+import Prism from "prismjs";
+import "../../styles/prism.css";
 
 const TUNNEL_API = "http://threatdef.com:8001/tunnel";
 
@@ -62,6 +64,9 @@ class TunnelTable extends Component {
     let secondsToWait = this.props.secondsToWait || 3;
     console.log("Tunnel table refresh rate:", secondsToWait);
     this.interval = setInterval(() => this.fetchData(), secondsToWait * 1000);
+
+    // Run Prism when the component mounts
+    Prism.highlightAll();
   }
 
   render() {
@@ -104,9 +109,7 @@ class TunnelTable extends Component {
     return (
       <div>
         <Table
-          pagination={{
-            pageSize: this.props.pagesize || 4
-          }}
+          pagination={{ pageSize: this.props.pagesize || 4 }}
           columnWidth="1"
           rowKey="http_id"
           dataSource={tunnels}
@@ -136,11 +139,15 @@ class TunnelTable extends Component {
             </Button>
           ]}
         >
-          {this.state.modalContent
-            ? this.state.modalContent
-                .split("\\r\\n")
-                .map(s => (s.length > 1 ? <div>{s}</div> : null))
-            : ""}
+          <pre>
+            <code className="language-http">
+              {this.state.modalContent
+                ? this.state.modalContent
+                    .split("\\r\\n")
+                    .map(s => (s.length > 1 ? <div>{s}</div> : <div> </div>))
+                : null}
+            </code>
+          </pre>
         </Modal>
       </div>
     );
