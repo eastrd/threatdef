@@ -1,8 +1,13 @@
 import React, { Component } from "react";
-import { Table, Spin, Modal, Button } from "antd";
+import { Table, Spin, Modal, Button, message } from "antd";
 import moment from "moment";
+import copy from "copy-to-clipboard";
 
 const TUNNEL_API = "http://threatdef.com:8001/tunnel";
+
+const success = () => {
+  message.success("Copied to Clipboard");
+};
 
 class TunnelTable extends Component {
   constructor() {
@@ -16,6 +21,7 @@ class TunnelTable extends Component {
       modelTitle: ""
     };
     this.fetchData();
+    // this.handleCopy = this.handleCopy.bind(this);
   }
 
   fetchData() {
@@ -43,9 +49,13 @@ class TunnelTable extends Component {
 
   handleOk = e => {
     this.setState({
-      modalVisible: false,
-      modalContent: null
+      modalVisible: false
     });
+  };
+
+  handleCopy = e => {
+    copy(this.state.modalContent.split("\\r\\n").join("\n"));
+    success();
   };
 
   componentDidMount() {
@@ -105,11 +115,7 @@ class TunnelTable extends Component {
             return {
               onClick: () => {
                 // Render into Modal
-                this.showModal(
-                  record.src_ip,
-                  record.dst_ip,
-                  record.data.split("\\r\\n")
-                );
+                this.showModal(record.src_ip, record.dst_ip, record.data);
               }
             };
           }}
@@ -119,14 +125,17 @@ class TunnelTable extends Component {
           visible={this.state.modalVisible}
           onOk={this.handleOk}
           onCancel={this.handleOk}
+          footer={[
+            <Button key="Back" onClick={this.handleOk}>
+              Back
+            </Button>,
+            <Button key="Copy" type="primary" onClick={this.handleCopy}>
+              Copy
+            </Button>
+          ]}
         >
           {this.state.modalContent
-            ? this.state.modalContent.map(s => (
-                <React.Fragment>
-                  {s}
-                  <br />
-                </React.Fragment>
-              ))
+            ? this.state.modalContent.split("\\r\\n").map(s => <div>{s}</div>)
             : ""}
         </Modal>
       </div>
