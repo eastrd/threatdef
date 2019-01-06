@@ -1,7 +1,13 @@
+/*
+	PLEASE RUN THIS SCRIPT UNDER SERVER DIRECTORY !
+	AS IT NEEDS TO USE RELATIVE PATH TO READ GEO JSON FILE !
+*/
+
 package main
 
 import (
 	"database/sql"
+	"io/ioutil"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -137,6 +143,16 @@ func serverHeader(c *gin.Context) {
 	c.Header("Access-Control-Allow-Origin", "*")
 }
 
+func fetchGeoJSON() string {
+	// Read file containing Geo json and return the content
+	path := "../geolocator/geo.json"
+
+	b, err := ioutil.ReadFile(path)
+	checkerr(err)
+
+	return string(b)
+}
+
 func main() {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
@@ -154,6 +170,10 @@ func main() {
 
 	router.GET("/login", func(c *gin.Context) {
 		c.JSON(200, listLoginCreds())
+	})
+
+	router.GET("/geo", func(c *gin.Context) {
+		c.String(200, fetchGeoJSON())
 	})
 
 	router.Run(":8001")
