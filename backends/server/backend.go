@@ -49,7 +49,7 @@ func getTunnelRecords() []Tunnel {
 	db := openDb()
 	defer db.Close()
 
-	row, err := db.Query("SELECT http_id, epoch, src_ip, dst_ip, data FROM http order by http_id desc limit 20")
+	row, err := db.Query("SELECT http_id, epoch, src_ip, dst_ip, data FROM http order by http_id desc limit 24")
 	checkerr(err)
 	defer row.Close()
 
@@ -80,7 +80,7 @@ func getCommandRecords() []Command {
 	db := openDb()
 	defer db.Close()
 
-	row, err := db.Query("SELECT input_id, epoch, src_ip, cmd FROM input order by input_id desc limit 20")
+	row, err := db.Query("SELECT input_id, epoch, src_ip, cmd FROM input order by input_id desc limit 24")
 	checkerr(err)
 	defer row.Close()
 
@@ -93,9 +93,7 @@ func getCommandRecords() []Command {
 		err := row.Scan(&inputID, &epoch, &srcIP, &cmd)
 		checkerr(err)
 
-		// Strip '"' from start and end of the field data
-		srcIP = strings.Trim(srcIP, `"`)
-		cmd = strings.Replace(strings.Trim(cmd, `"' `), `\\`, `\`, -1)
+		cmd = strings.Replace(cmd, `\\`, `\`, -1)
 
 		// Craft slice of structs
 		c = Command{inputID, epoch, srcIP, cmd}

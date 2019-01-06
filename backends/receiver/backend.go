@@ -166,30 +166,32 @@ func addInput(epoch, srcIP, cmd string) {
 
 func processJSON(jsonStr map[string]interface{}) {
 	// Detect event type based on EventID and collect relevant information and send them to mysql
-	epoch, _ := json.Marshal(jsonStr["epoch"])
-	srcIP, _ := json.Marshal(jsonStr["src_ip"])
-	addIPstats(string(srcIP))
+	epoch := strconv.FormatFloat(jsonStr["epoch"].(float64), 'f', 0, 64)
+	srcIP := strings.Trim(jsonStr["src_ip"].(string), `"`)
+
+	addIPstats(srcIP)
+
 	switch jsonStr["eventid"] {
 
 	case "cowrie.login.success", "cowrie.login.failed":
-		username, _ := json.Marshal(jsonStr["username"])
-		password, _ := json.Marshal(jsonStr["password"])
-		addLoginAttempt(string(username), string(password))
+		username := strings.Trim(jsonStr["username"].(string), `"`)
+		password := strings.Trim(jsonStr["password"].(string), `"' `)
+		addLoginAttempt(username, password)
 
 	case "cowrie.direct-tcpip.data":
 		// Tunnel Request: epoch int, src_ip varchar, dst_ip varchar, data varchar
-		dstIP, _ := json.Marshal(jsonStr["dst_ip"])
-		data, _ := json.Marshal(jsonStr["data"])
+		dstIP := strings.Trim(jsonStr["dst_ip"].(string), `"`)
+		data := strings.Trim(jsonStr["data"].(string), `"'`)
 		// Check that the Data is in plain text instead of HTTPS connection (i.e. No "\\x{number}")
-		if !strings.Contains(string(data), "\\\\x") && (strings.Contains(string(data), "GET") || strings.Contains(string(data), "POST")) {
-			addTunnelData(string(epoch), string(srcIP), string(dstIP), string(data))
+		if !strings.Contains(data, "\\\\x") && (strings.Contains(data, "GET") || strings.Contains(data, "POST")) {
+			addTunnelData(epoch, srcIP, dstIP, data)
 		}
 
 	case "cowrie.command.input":
 		// Capture Command inputs
-		cmd, _ := json.Marshal(jsonStr["input"])
-		if string(cmd) != `""` {
-			addInput(string(epoch), string(srcIP), string(cmd))
+		cmd := strings.Replace(strings.Trim(jsonStr["input"].(string), `"' `), `\\`, `\`, -1)
+		if cmd != `""` {
+			addInput(epoch, srcIP, cmd)
 		}
 	}
 }
