@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -47,9 +48,9 @@ func openDb() *sql.DB {
 	return db
 }
 
-func fetchAllIP(db *sql.DB) []string {
+func fetchAllIP(db *sql.DB, tableName string) []string {
 	// Returns an array of all IP addresses in traffic table
-	row, err := db.Query(`SELECT ip from traffic`)
+	row, err := db.Query(`SELECT ip from ` + tableName)
 	checkerr(err)
 	defer row.Close()
 
@@ -142,6 +143,39 @@ func createDB(db *sql.DB) {
 	defer create.Close()
 }
 
+func createGeoJSON(db *sql.DB) {
+	// Fetch all IP and their geo info
+	row, err := db.Query(
+		`select geo.ip, geo.lat, geo.lon, traffic.num_attempts from geo inner join traffic on geo.ip=traffic.ip`)
+	checkerr(err)
+	defer row.Close()
+
+	ipInfoArr := make([]IPInfo, 0)
+
+	var ip, num, lat, lon string
+
+	for row.Next() {
+		err := row.Scan(&ip, &lat, &lon, &num)
+		checkerr(err)
+
+		ipInfoArr = append(
+			ipInfoArr,
+			IPInfo{IP: ip, Lat: lat, Lon: lon, Num: num})
+	}
+
+	// Convert into JSON
+	res, err := json.Marshal(ipInfoArr)
+	checkerr(err)
+
+	// Write to file
+	f, err := os.Create("geo.json")
+	checkerr(err)
+	defer f.Close()
+
+	f.WriteString(string(res))
+	f.Sync()
+}
+
 func main() {
 	// Reuse db instance
 	db := openDb()
@@ -149,7 +183,7 @@ func main() {
 	createDB(db)
 
 	for true {
-		for _, ip := range fetchAllIP(db) {
+		for _, ip := range fetchAllIP(db, "traffic") {
 			// Check if already exists in geo table
 			fmt.Println("Check " + ip)
 
@@ -171,11 +205,15 @@ func main() {
 
 			// Store into geo table
 			addGeoRecord(db, ip, geo.lat, geo.lon)
-			fmt.Println("added!")
+			fmt.Println("Added!")
 
-			// ip-api has a rate limit of 150 requests per minute, sleep for 0.5 second
+			// IP-API has a rate limit of 150 requests per minute, sleep for 0.5 second
 			time.Sleep(500 * time.Millisecond)
 		}
+
+		// Generate JSON file
+		fmt.Println("Outputting JSON file")
+		createGeoJSON(db)
 
 		fmt.Print("Sleep for 12 hours")
 		time.Sleep(12 * time.Hour)
