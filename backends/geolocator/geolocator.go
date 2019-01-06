@@ -10,7 +10,11 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -20,6 +24,14 @@ import (
 type geoInfo struct {
 	lat string
 	lon string
+}
+
+// IPInfo is the {} containing info for single IP address
+type IPInfo struct {
+	IP  string `json:"ip"`
+	Lat string `json:"lat"`
+	Lon string `json:"lon"`
+	Num string `json:"num"`
 }
 
 func checkerr(err error) {
@@ -50,7 +62,6 @@ func fetchAllIP(db *sql.DB) []string {
 
 		// Strip '"' from start and end of the field data
 		ip = strings.Trim(ip, `"`)
-		fmt.Println(ip)
 
 		ipArr = append(ipArr, ip)
 	}
@@ -58,39 +69,114 @@ func fetchAllIP(db *sql.DB) []string {
 	return ipArr
 }
 
+func toJSON(respStr []byte) map[string]interface{} {
+	var jsonStr map[string]interface{}
+	err := json.Unmarshal(respStr, &jsonStr)
+	checkerr(err)
+
+	return jsonStr
+}
+
 func getGeoInfo(ip string) geoInfo {
 	// Get Lat and Lon for given IP address
-	return geoInfo{"0", "0"}
+	// If cannot fetch geoinfo, return both lat and lon as "0"
+
+	lat := "000"
+	lon := "000"
+
+	resp, err := http.Get("http://ip-api.com/json/" + ip + "?fields=status,lat,lon")
+	if err != nil {
+		fmt.Println(err)
+		return geoInfo{lat, lon}
+	}
+	defer resp.Body.Close()
+	respStr, err := ioutil.ReadAll(resp.Body)
+	checkerr(err)
+
+	/* Sample response: {
+		"status": "success",
+		"lat": 45.511,
+		"lon": -73.5561
+	}
+	*/
+	respJSON := toJSON(respStr)
+
+	// Break down into individual fields
+	if respJSON["status"].(string) == "success" {
+		lat = float64ToStr(respJSON["lat"].(float64))
+		lon = float64ToStr(respJSON["lon"].(float64))
+	}
+
+	return geoInfo{lat, lon}
+}
+
+func float64ToStr(inFl64 float64) string {
+	// The API's accuracy is 4 decimals (~11m)
+	return strconv.FormatFloat(inFl64, 'f', 4, 64)
+}
+
+func checkIPExist(db *sql.DB, ip string) bool {
+	// check if IP exists
+	row, err := db.Query("SELECT ip FROM geo WHERE ip = ?", ip)
+	checkerr(err)
+	defer row.Close()
+
+	for row.Next() {
+		return true
+	}
+
+	return false
+}
+
+func addGeoRecord(db *sql.DB, ip, lat, lon string) {
+	// Insert IP with Lat and Lon into the geo table
+	insert, err := db.Query("INSERT INTO geo (ip, lat, lon) VALUES ( ?, ?, ? )", ip, lat, lon)
+	checkerr(err)
+	defer insert.Close()
+}
+
+func createDB(db *sql.DB) {
+	// Check if the table exists, if not then create a new table
+	create, err := db.Query("CREATE TABLE IF NOT EXISTS geo (ip VARCHAR(25) NOT NULL, lat VARCHAR(25) NOT NULL, lon VARCHAR(25) NOT NULL)")
+	checkerr(err)
+	defer create.Close()
 }
 
 func main() {
-	for true {
-		// Reuse db instance
-		db := openDb()
-		defer db.Close()
+	// Reuse db instance
+	db := openDb()
+	defer db.Close()
+	createDB(db)
 
+	for true {
 		for _, ip := range fetchAllIP(db) {
 			// Check if already exists in geo table
-			fmt.Println("Check" + ip)
+			fmt.Println("Check " + ip)
 
-			// check if IP exists
-			row, err := db.Query("SELECT ip, num_attempts FROM traffic WHERE ip = ?", ip)
-			checkerr(err)
-			defer row.Close()
-
-			ipExist := false
-
-			for row.Next() {
-				ipExist = true
+			if checkIPExist(db, ip) {
+				fmt.Println(ip + " exists, skip")
+				continue
 			}
 
-			if ipExist {
-				fmt.Println(ip + "exists, skip")
-			} else {
-				fmt.Println(ip + " not exist")
-				getGeoInfo(ip)
+			fmt.Println(ip + " not exist")
+			geo := getGeoInfo(ip)
+
+			fmt.Println("Fetched ip: " + ip + " lat: " + geo.lat + " and lon: " + geo.lon)
+
+			// Check for fetch request lat lon variable
+			if geo.lat == "000" && geo.lon == "000" {
+				fmt.Println("Detected error in previous fetch response, abort current ip")
+				continue
 			}
+
+			// Store into geo table
+			addGeoRecord(db, ip, geo.lat, geo.lon)
+			fmt.Println("added!")
+
+			// ip-api has a rate limit of 150 requests per minute, sleep for 0.5 second
+			time.Sleep(500 * time.Millisecond)
 		}
+
 		fmt.Print("Sleep for 12 hours")
 		time.Sleep(12 * time.Hour)
 	}
