@@ -1,37 +1,78 @@
-def get_response(URL):
-    import requests
+import requests
+import socket
+import re
 
+
+def get_response(URL, headers):
+    HEADERS = parse_header(headers)
+    print(HEADERS)
     burp_proxy = "http://127.0.0.1:8080"
     proxies = {
         "http": burp_proxy,
         "https": burp_proxy,
     }
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.109 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
-        "Accept-Encoding": "gzip, deflate",
-        "Accept-Language": "en-AU,en;q=0.9,en-GB;q=0.8,en-US;q=0.7,zh-CN;q=0.6,zh;q=0.5,zh-TW;q=0.4,vi;q=0.3,pl;q=0.2",
-    }
+    return requests.get(URL, headers=HEADERS, proxies=proxies, verify=False).content
 
-    return requests.get(URL, headers=headers, proxies=proxies, verify=False).content
 
-import socket
+def parse_header(header):
+    """
+    :param header: http headers in String
+    :rtype dict
+    """
+    # Split by first occurrence
+    header = header.split("\r\n")
+    res = {}
+    for line in header[1:]:
+        if not line:
+            continue
+        split_idx = line.index(":")
+        res[line[:split_idx]] = line[split_idx + 2:]
+    return res
 
-s = socket.socket()
+
+
+
 host = "127.0.0.1"
 port = 12345
+cafile = ""
+certfile = "cert.cert"
+
+purpose = ssl.Purpose.CLIENT_AUTH
+context = ssl.create_default_context(purpose, cafile=cafile)
+context.load_cert_chain(certfile)
+
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.bind((host,port))
 s.listen(20)
+
+
 while True:
-    conn, addr = s.accept()
-    headers = conn.recv(4096)
-    host_lines = headers.split("\n")
-    for line in host_lines:
-        if "HOST:" in line:
-            host = line[6:]
-            break
-    protocol = "https" if port == "443" else "http"
-    host = protocol + "://" + url + ":" + port
-    print headers
-    print host
-    conn.close()
+    raw_conn, addr = s.accept()
+    headers = raw_conn.recv(4096).decode("utf-8")
+    if not headers:
+        # Chrome sometimes sends empty headers
+        print("INFO: Empty headers")
+        raw_conn.close()
+        continue
+
+    print(headers)
+
+    try:
+        host = re.search("Host: (.*?)\\r\\n", headers, re.MULTILINE).group(1)
+        if ":" not in host:
+            # No port number is supplied
+            url = "http://" + host
+        else:
+            protocol = "https://" if ":443" in host else "http://"
+            url = protocol + host
+    except Exception as e:
+        print(e)
+        print(headers)
+        print(len(headers))
+
+    ssl_conn = context.wrap_socket(raw_sock, server_side=True)
+
+    resp = get_response(url, headers)
+
+    ssl_conn.sendall(resp)
+    ssl_conn.close()
